@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Datos: el dataset real NUNCA se sube (el repositorio es público)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/
+
+# Salidas generadas: se recrean con src/generar_datos_sinteticos.py y src/entrenar.py
+data/synthetic/
+models/
+reports/
+
+# Editor y sistema operativo
+.vscode/
+.idea/
+.claude/
+.DS_Store
+Thumbs.db
