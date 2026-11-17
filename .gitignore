@@ -15,6 +15,18 @@ data/synthetic/
 models/
 reports/
 
+# Base de datos y secretos del módulo web
+data/*.db
+data/*.db-journal
+.env
+.env.local
+
+# Frontend Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+*.tsbuildinfo
+
 # Editor y sistema operativo
 .vscode/
 .idea/
