@@ -6,6 +6,10 @@ probabilidad de perder una asignatura, explica por qué y sugiere acciones al do
 > Los datos actuales son **sintéticos** (inventados) y solo sirven para probar el pipeline.
 > Cuando llegue el dataset real se reemplazan sin cambiar la lógica del modelo.
 
+**[Estado del proyecto y evidencias](docs/ESTADO.md)** ·
+[Evidencias detalladas](docs/EVIDENCIAS.md) · [Decisiones](docs/DECISIONES.md) ·
+[Avance completo](docs/AVANCE.md)
+
 ## Módulo web para docentes (FastAPI + Next.js)
 
 Además del prototipo Streamlit, hay un módulo web con **login seguro**, aislamiento por
@@ -19,7 +23,7 @@ FastAPI (:8000) ── SQLAlchemy ── SQLite/PostgreSQL
    │
    ├── auth: bcrypt + sesiones opacas + CSRF + límite de intentos
    ├── ML: modelos .joblib existentes (T0/T1/T2) + explicación por oclusión
-   ├── LLM: resumen estructurado (OpenAI) con plantilla de respaldo
+   ├── LLM: resumen estructurado (Gemini) con OpenAI y plantilla de respaldo
    └── notificaciones: se crean/actualizan al generar alertas
 ```
 
@@ -74,15 +78,21 @@ actualiza el centro de notificaciones.
 | Datos del LLM | solo campos académicos en blanca; nunca nombre, ID, correo, género ni estrato |
 
 Para producción: definir `EWS_SECRET_KEY` aleatorio y estable, `EWS_COOKIE_SECURE=1`,
-orígenes permitidos y una clave de OpenAI. Ver `.env.example`.
+orígenes permitidos y una clave de proveedor de LLM. Ver `.env.example`.
 
 ### LLM y resúmenes
 
-Si hay `OPENAI_API_KEY`, el resumen se redacta con `gpt-4o-mini` (configurable) y se etiqueta
-como «Redactado con IA». Si no hay clave, hay error, se agota el tiempo o se supera
-`EWS_LLM_MAX_CALLS`, se usa una plantilla local y se etiqueta como «Resumen automático».
+Si hay `GEMINI_API_KEY`, el resumen se redacta con Gemini (por defecto `gemini-3.5-flash-lite`)
+mediante la Interactions API, con `store=false` para que el proveedor no conserve el caso.
+Si no hay clave de Gemini pero hay `OPENAI_API_KEY`, se usa `gpt-4o-mini` (configurable). Si
+hay error, se agota el tiempo o se supera `EWS_LLM_MAX_CALLS`, se usa una plantilla local.
+En la interfaz el bloque se llama «Resumen del caso»; la fuente se regresa en el campo
+`resumen.fuente` (`llm` o `plantilla`).
+
+Solo se envían campos académicos en blanca: nunca nombre, ID, correo, género ni estrato.
 Los resúmenes se guardan asociados a una firma de los datos, así que no se cobra dos veces
 por el mismo caso. El modelo clásico siempre hace la predicción; el LLM solo redacta.
+La clave real va en un `.env` local, ignorado por Git.
 
 ### Pruebas
 
@@ -121,9 +131,15 @@ Alertas tempranas/
 ├── frontend/                  # app Next.js (login, panel, filtros, notificaciones)
 ├── data/raw/                  # aquí va el dataset real (excluido de Git)
 ├── models/                    # modelos .joblib versionados localmente
-├── reports/                   # métricas, equidad, figuras
+├── reports/                   # métricas, equidad, figuras (regenerables)
 ├── tests/                     # pruebas de la API
-└── docs/AVANCE.md             # documento de avance del proyecto
+└── docs/
+    ├── ESTADO.md              # estado del prototipo y evidencias (índice)
+    ├── EVIDENCIAS.md          # métricas, figuras y verificación
+    ├── DECISIONES.md          # por qué se tomó cada camino
+    ├── AVANCE.md              # documento de avance del proyecto
+    ├── evidencias/            # copia versionada de métricas y figuras
+    └── investigacion/         # informe técnico y fuentes revisadas
 ```
 
 ## Usar el dataset real
