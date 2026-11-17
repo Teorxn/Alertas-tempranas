@@ -200,3 +200,27 @@ matrices de confusión) y auditoría de equidad en `reports/equidad.csv`.
 | Desbalance fuerte | Pesos por clase, ajuste de umbral, SMOTE |
 | Fuga de información | Variables definidas por momento en `config.py` |
 | Docentes no confían en la alerta | Explicación por estudiante + acciones concretas + validación con docentes |
+
+## 12. Módulo web con acceso seguro (avance de la Fase 2)
+
+Se agregó una capa web para que el docente trabaje solo con **sus** cursos, sin confundirlos
+con los de otros profesores:
+
+- **Autenticación**: contraseñas con bcrypt + pre-hash SHA-256, sesiones opacas con solo el
+  hash en base de datos, expiración por tiempo e inactividad, bloqueo temporal y límite de
+  intentos. Cookies `HttpOnly`, `SameSite=Lax` y `Secure` en producción.
+- **CSRF y XSS**: token de doble envío derivado por HMAC del secreto del servidor, validación
+  de `Origin`, Content Security Policy y renderizado React sin HTML dinámico.
+- **Aislamiento por docente**: el dataset sintético incorpora `docente_id` y `curso`. Cada
+  endpoint filtra por el docente de la sesión; una ficha ajena responde 404 para no revelar
+  su existencia. Los filtros de la interfaz son una comodidad, no la única barrera.
+- **Notificaciones in-app**: al ejecutar «Actualizar predicciones» se recalculan T0/T1/T2 para
+  los cursos propios, se crean o actualizan alertas activas (Alta/Media) y se pueden marcar
+  como leídas o atendidas.
+- **LLM al final del pipeline**: el modelo clásico calcula probabilidad y señales; un LLM
+  opcional solo redacta un resumen estructurado a partir de datos en blanca. Sin clave de
+  OpenAI, o si falla, se usa una plantilla. Los resúmenes se cachean por firma de datos.
+
+Estado: prototipo funcional con datos sintéticos; pendiente de conectar con el LMS real,
+migrar a PostgreSQL y validar los textos con docentes.
+
