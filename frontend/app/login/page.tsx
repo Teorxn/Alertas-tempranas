@@ -37,32 +37,30 @@ export default function PaginaLogin() {
   return (
     <main className="login-page">
       <section className="login-hero">
-        <div className="hero-badge">🎓 Semillero de investigación</div>
+        <div className="hero-badge">Sistema de alertas tempranas</div>
         <h1>
-          Llegar antes
+          Detecta señales
           <br />
-          <span>importa</span>
+          <span>a tiempo</span>
         </h1>
         <p>
-          Detecta señales de acompañamiento académico a tiempo, entiende qué está pasando
-          y actúa con tus estudiantes antes de que sea demasiado tarde.
+          Identifica estudiantes que necesitan acompañamiento académico mientras aún hay
+          oportunidad de intervenir.
         </p>
-        <div className="hero-ilustracion" aria-hidden="true">
-          <span className="burbuja b1">📘</span>
-          <span className="burbuja b2">💡</span>
-          <span className="burbuja b3">🚦</span>
-          <div className="hero-tarjeta">
-            <div className="hero-tarjeta-linea" />
-            <div className="hero-tarjeta-linea corta" />
-            <div className="hero-tarjeta-pill">Alerta temprana · Corte 1</div>
-          </div>
+
+        <div className="hero-panel" aria-hidden="true">
+          <div className="hero-panel-header">Seguimiento del semestre</div>
+          <div className="hero-panel-row"><span>T0 · Inicio</span><span>Historial</span></div>
+          <div className="hero-panel-row"><span>T1 · Corte 1</span><span>Primeras notas</span></div>
+          <div className="hero-panel-row"><span>T2 · Corte 2</span><span>Último tramo</span></div>
         </div>
-        <p className="hero-nota">Datos sintéticos · Prototipo de investigación</p>
+
+        <p className="hero-nota">Prototipo de investigación · Datos sintéticos</p>
       </section>
 
       <section className="login-panel">
         <form className="login-card" onSubmit={enviar} noValidate>
-          <div className="login-logo">🚦</div>
+          <div className="login-logo">AT</div>
           <h2>Bienvenido, profesor</h2>
           <p className="login-sub">Ingresa para ver los estudiantes de tus cursos.</p>
 
@@ -116,7 +114,8 @@ export default function PaginaLogin() {
           </button>
 
           <p className="login-foot">
-            Tu sesión es privada: solo ves los cursos que dictas. El modelo sugiere, tú decides.
+            Tu sesión es privada: solo ves los cursos que dictas. La predicción es una
+            orientación y la decisión siempre la toma el docente.
           </p>
         </form>
       </section>

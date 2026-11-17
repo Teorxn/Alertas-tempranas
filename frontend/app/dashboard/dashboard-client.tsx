@@ -15,7 +15,7 @@ const MOMENTOS: { valor: Momento; etiqueta: string; pista: string }[] = [
 ];
 
 const ETIQUETA_PRIORIDAD: Record<Prioridad, string> = {
-  Alta: "Acompañamiento urgente",
+  Alta: "Atención urgente",
   Media: "Estar atento",
   Baja: "Va bien",
 };
@@ -144,7 +144,7 @@ export default function DashboardClient({ docente }: { docente: Docente }) {
     try {
       await api("/api/auth/logout", { method: "POST" });
     } catch {
-      // Igualmente se dirige al login: la sesión del servidor se cierra por inactividad.
+      // Igualmente se dirige al login: la sesión se cierra por inactividad en el servidor.
     }
     router.replace("/login");
     router.refresh();
@@ -161,7 +161,7 @@ export default function DashboardClient({ docente }: { docente: Docente }) {
     <div className="app-shell">
       <header className="barra-superior">
         <div className="marca">
-          <span className="marca-icono">🚦</span>
+          <span className="marca-icono">AT</span>
           <div>
             <strong>Alertas tempranas</strong>
             <small>Acompañamiento académico</small>
@@ -169,11 +169,11 @@ export default function DashboardClient({ docente }: { docente: Docente }) {
         </div>
         <div className="barra-acciones">
           <button
-            className={`boton-campana ${resumenNotif.no_leidas ? "con-alerta" : ""}`}
+            className={`boton-notificaciones ${resumenNotif.no_leidas ? "con-alerta" : ""}`}
             onClick={() => setPanelNotif(!panelNotif)}
             aria-label={`Notificaciones: ${resumenNotif.no_leidas} sin leer`}
           >
-            🔔
+            Notificaciones
             {resumenNotif.no_leidas > 0 && <span className="contador">{resumenNotif.no_leidas}</span>}
           </button>
           <div className="avatar" title={docente.email}>{docente.nombre.charAt(0)}</div>
@@ -194,11 +194,11 @@ export default function DashboardClient({ docente }: { docente: Docente }) {
                 <h3>Notificaciones</h3>
                 <p>{resumenNotif.activas} alertas activas · {resumenNotif.pendientes} por atender</p>
               </div>
-              <button onClick={() => setPanelNotif(false)} aria-label="Cerrar">✕</button>
+              <button className="cerrar-drawer" onClick={() => setPanelNotif(false)}>Cerrar</button>
             </div>
             <div className="drawer-lista">
               {notificaciones.length === 0 && (
-                <div className="vacio"><span>🌿</span><p>Por ahora no hay alertas activas.</p></div>
+                <div className="vacio"><p>Por ahora no hay alertas activas.</p></div>
               )}
               {notificaciones.map((n) => (
                 <button key={n.id} className={`notif ${n.leida ? "" : "sin-leer"}`} onClick={() => abrirNotificacion(n)}>
@@ -219,11 +219,11 @@ export default function DashboardClient({ docente }: { docente: Docente }) {
       <main className="contenido">
         <section className="bienvenida">
           <div>
-            <h1>¡Hola, {docente.nombre.split(" ")[0]}! 👋</h1>
+            <h1>Hola, {docente.nombre.split(" ")[0]}</h1>
             <p>Veamos cómo van tus estudiantes. Puedes filtrar por curso y revisar cada caso con calma.</p>
           </div>
           <div className="momento-box">
-            <label htmlFor="momento">¿En qué momento del semestre estamos?</label>
+            <label htmlFor="momento">Momento del semestre</label>
             <select id="momento" value={momento} onChange={(e) => setMomento(e.target.value as Momento)}>
               {MOMENTOS.map((m) => <option key={m.valor} value={m.valor}>{m.etiqueta}</option>)}
             </select>
@@ -235,19 +235,19 @@ export default function DashboardClient({ docente }: { docente: Docente }) {
 
         <section className="tarjetas">
           <article className="tarjeta stat">
-            <span className="stat-icono">👥</span>
+            <span className="stat-marca" />
             <div><small>Estudiantes visibles</small><strong>{estudiantes.length}</strong></div>
           </article>
           <article className="tarjeta stat prioridad-alta">
-            <span className="stat-icono">🔴</span>
+            <span className="stat-marca" />
             <div><small>Atención urgente</small><strong>{conteos.Alta}</strong></div>
           </article>
           <article className="tarjeta stat prioridad-media">
-            <span className="stat-icono">🟡</span>
+            <span className="stat-marca" />
             <div><small>Estar atento</small><strong>{conteos.Media}</strong></div>
           </article>
           <article className="tarjeta stat prioridad-baja">
-            <span className="stat-icono">🟢</span>
+            <span className="stat-marca" />
             <div><small>Van bien</small><strong>{conteos.Baja}</strong></div>
           </article>
         </section>
@@ -285,7 +285,7 @@ export default function DashboardClient({ docente }: { docente: Docente }) {
             Solo con alerta
           </label>
           <button className="boton-primario" onClick={generarAlertas} disabled={!!procesando}>
-            {procesando || "🔄 Actualizar predicciones"}
+            {procesando || "Actualizar predicciones"}
           </button>
         </section>
 
@@ -321,7 +321,7 @@ export default function DashboardClient({ docente }: { docente: Docente }) {
                     </tr>
                   ))}
                   {!cargando && estudiantes.length === 0 && (
-                    <tr><td colSpan={5} className="vacio-tabla">No hay estudiantes con estos filtros 🌱</td></tr>
+                    <tr><td colSpan={5} className="vacio-tabla">No hay estudiantes con estos filtros.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -331,9 +331,8 @@ export default function DashboardClient({ docente }: { docente: Docente }) {
           <article className="tarjeta ficha">
             {detalle === null ? (
               <div className="vacio">
-                <span className="vacio-emoji">🔍</span>
-                <h3>Elige un estudiante</h3>
-                <p>Verás aquí el resumen, las señales que influyen y una acción sugerida.</p>
+                <h3>Selecciona un estudiante</h3>
+                <p>Verás el resumen del caso, las señales que influyen y una acción sugerida.</p>
               </div>
             ) : (
               <>
@@ -355,16 +354,13 @@ export default function DashboardClient({ docente }: { docente: Docente }) {
                   </div>
                 </div>
 
-                <div className="bloque-ia">
-                  <div className="bloque-titulo">
-                    <h3>✨ Lo que está pasando</h3>
-                    <span className={`fuente ${detalle.resumen.fuente}`}>
-                      {detalle.resumen.fuente === "llm" ? "Redactado con IA" : "Resumen automático"}
-                    </span>
+                <div className="resumen">
+                  <div className="resumen-titulo">
+                    <h3>Resumen del caso</h3>
                   </div>
                   <h4>{detalle.resumen.titulo}</h4>
                   {detalle.resumen.texto.split("\n").filter(Boolean).map((parrafo, i) => <p key={i}>{parrafo}</p>)}
-                  <div className="accion"><strong>👉 Acción sugerida</strong><p>{detalle.resumen.accion}</p></div>
+                  <div className="accion"><strong>Acción sugerida</strong><p>{detalle.resumen.accion}</p></div>
                 </div>
 
                 <div className="bloque">
@@ -381,10 +377,10 @@ export default function DashboardClient({ docente }: { docente: Docente }) {
                 {detalle.notificacion_id !== null && (
                   <div className="ficha-acciones">
                     <button className="boton-secundario" onClick={() => marcarNotificacion(detalle.notificacion_id!, { leida: true })} disabled={!detalle.no_leida}>
-                      {detalle.no_leida ? "Marcar como leída" : "✓ Leída"}
+                      {detalle.no_leida ? "Marcar como leída" : "Leída"}
                     </button>
                     <button className="boton-primario" onClick={() => marcarNotificacion(detalle.notificacion_id!, { atendida: true })} disabled={detalle.atendida}>
-                      {detalle.atendida ? "✓ Atendida" : "Marcar como atendida"}
+                      {detalle.atendida ? "Atendida" : "Marcar como atendida"}
                     </button>
                   </div>
                 )}
@@ -394,8 +390,8 @@ export default function DashboardClient({ docente }: { docente: Docente }) {
         </section>
 
         <footer className="pie">
-          <p>⚠️ El modelo sugiere, el docente decide. Los datos son sintéticos y se usan solo para demostrar el prototipo.</p>
-          <p>Se trabajan identificadores seudonimizados; la información sensible no se envía al modelo de lenguaje.</p>
+          <p>La predicción es una orientación: el docente decide la intervención. Los datos son sintéticos y se usan solo para demostrar el prototipo.</p>
+          <p>Se trabajan identificadores seudonimizados y no se comparten datos personales con el generador del resumen.</p>
         </footer>
       </main>
     </div>
