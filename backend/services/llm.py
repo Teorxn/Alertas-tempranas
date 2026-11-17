@@ -1,12 +1,15 @@
 """Resumen narrativo del estudiante.
 
 El LLM recibe SOLO datos estructurados y no sensibles: nunca nombres, IDs,
-correos, género, estrato ni texto libre. Si no hay API key, falla o se tarda
-demasiado, se usa una plantilla local (el sistema sigue funcionando).
+correos, género, estrato ni texto libre. Se prefiere Gemini; si no hay clave,
+falla o se tarda demasiado, se prueba OpenAI y finalmente se usa una plantilla
+local (el sistema sigue funcionando).
 """
 import hashlib
 import json
 import logging
+
+import httpx
 
 from settings import settings
 
@@ -15,21 +18,24 @@ logger = logging.getLogger(__name__)
 SYSTEM_PROMPT = (
     "Eres un orientador académico de una universidad. Redactas resúmenes breves para "
     "que un docente acompañe a un estudiante que puede perder una asignatura. "
-    "Usa español neutro, cercano y respetuoso. Nunca etiquetes al estudiante, nunca "
+    "Usa español neutro, cercano y respetuoso. Escribe en tercera persona, dirigido al "
+    "docente (nunca uses «tú» ni «has»). Nunca etiquetes al estudiante, nunca "
     "inventes datos ni mencionemos identificadores, nombres ni información personal. "
     "Devuelve únicamente un objeto JSON con las claves: titulo (máximo 70 caracteres), "
     "texto (2 o 3 frases, máximo 350 caracteres) y accion (una frase, máximo 180 caracteres). "
     "Basate exclusivamente en las señales y acciones sugeridas que recibes."
 )
 
+_HTTP = httpx.Client(timeout=20.0)
+
 _CLIENT = None
-if settings.llm_enabled:
+if settings.openai_api_key:
     try:
         from openai import OpenAI
 
         _CLIENT = OpenAI(api_key=settings.openai_api_key, timeout=8.0, max_retries=0)
     except Exception as exc:  # pragma: no cover - solo si la librería falla al iniciar
-        logger.warning("No se pudo iniciar el cliente LLM: %s", type(exc).__name__)
+        logger.warning("No se pudo iniciar el cliente OpenAI: %s", type(exc).__name__)
         _CLIENT = None
 
 
@@ -76,7 +82,59 @@ def _validar(datos: object) -> dict | None:
     return resultado
 
 
-def resumen_llm(payload: dict) -> dict | None:
+def _parsear_json(contenido: str) -> dict | None:
+    contenido = contenido.strip()
+    if contenido.startswith("```"):
+        contenido = contenido.split("```", 2)[1]
+        if contenido.lower().startswith("json"):
+            contenido = contenido[4:]
+    try:
+        return _validar(json.loads(contenido.strip()))
+    except (ValueError, TypeError):
+        return None
+
+
+def resumen_gemini(payload: dict) -> dict | None:
+    """Usa la Interactions API de Gemini (recomendada desde 2026).
+
+    ``store=False`` evita que el proveedor conserve el caso: solo se envían
+    campos académicos en blanca, nunca identificadores ni datos personales.
+    """
+    if not settings.gemini_api_key:
+        return None
+    try:
+        entrada = (
+            SYSTEM_PROMPT
+            + "\n\nDatos del caso en JSON:\n"
+            + json.dumps(payload, ensure_ascii=False)
+        )
+        respuesta = _HTTP.post(
+            "https://generativelanguage.googleapis.com/v1beta/interactions",
+            params={"key": settings.gemini_api_key},
+            json={
+                "model": settings.gemini_model,
+                "input": entrada,
+                "store": False,
+            },
+        )
+        respuesta.raise_for_status()
+        datos = respuesta.json()
+        partes = []
+        for paso in datos.get("steps", []):
+            if paso.get("type") == "model_output":
+                for parte in paso.get("content", []):
+                    if parte.get("type") == "text":
+                        partes.append(parte.get("text", ""))
+        if not partes:
+            return None
+        return _parsear_json("".join(partes))
+    except Exception as exc:
+        # No registramos el payload: podría contener información del estudiante.
+        logger.warning("Gemini no disponible: %s", type(exc).__name__)
+        return None
+
+
+def resumen_openai(payload: dict) -> dict | None:
     if _CLIENT is None:
         return None
     try:
@@ -91,11 +149,14 @@ def resumen_llm(payload: dict) -> dict | None:
             max_completion_tokens=300,
         )
         contenido = respuesta.choices[0].message.content or ""
-        return _validar(json.loads(contenido))
+        return _parsear_json(contenido)
     except Exception as exc:
-        # No registramos el payload: podría contener información del estudiante.
-        logger.warning("LLM no disponible, se usa plantilla: %s", type(exc).__name__)
+        logger.warning("OpenAI no disponible: %s", type(exc).__name__)
         return None
+
+
+def resumen_llm(payload: dict) -> dict | None:
+    return resumen_gemini(payload) or resumen_openai(payload)
 
 
 def generar_resumen(payload: dict) -> tuple[dict, str]:

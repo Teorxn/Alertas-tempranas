@@ -1,0 +1,35 @@
+{
+  "T0_inicio": {
+    "modelo": "Regresion Logistica",
+    "umbral": 0.24,
+    "recall": 0.956,
+    "precision": 0.413,
+    "f1": 0.577,
+    "f2": 0.757,
+    "roc_auc": 0.872,
+    "pr_auc": 0.762,
+    "pct_alertados": 0.657
+  },
+  "T1_corte1": {
+    "modelo": "Regresion Logistica",
+    "umbral": 0.32,
+    "recall": 0.943,
+    "precision": 0.676,
+    "f1": 0.787,
+    "f2": 0.874,
+    "roc_auc": 0.96,
+    "pr_auc": 0.912,
+    "pct_alertados": 0.396
+  },
+  "T2_corte2": {
+    "modelo": "Random Forest",
+    "umbral": 0.36,
+    "recall": 0.918,
+    "precision": 0.781,
+    "f1": 0.844,
+    "f2": 0.887,
+    "roc_auc": 0.981,
+    "pr_auc": 0.959,
+    "pct_alertados": 0.334
+  }
+}
