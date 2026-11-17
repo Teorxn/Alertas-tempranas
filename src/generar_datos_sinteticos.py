@@ -14,6 +14,17 @@ ASIGNATURAS = {  # dificultad relativa
     "Programacion I": 0.25, "Estadistica": 0.20, "Comunicacion Oral": -0.20,
 }
 
+# Cada asignatura pertenece a un docente. Este campo permite que la API limite
+# cada consulta a los cursos del profesor autenticado (aislamiento por docente).
+DOCENTES = {
+    "Calculo I": {"codigo": "DOC-01", "nombre": "Ana Torres", "email": "ana.torres@universidad.edu.co"},
+    "Fisica I": {"codigo": "DOC-02", "nombre": "Luis Herrera", "email": "luis.herrera@universidad.edu.co"},
+    "Algebra Lineal": {"codigo": "DOC-03", "nombre": "Marta Rios", "email": "marta.rios@universidad.edu.co"},
+    "Programacion I": {"codigo": "DOC-04", "nombre": "Carlos Vega", "email": "carlos.vega@universidad.edu.co"},
+    "Estadistica": {"codigo": "DOC-05", "nombre": "Sofia Duque", "email": "sofia.duque@universidad.edu.co"},
+    "Comunicacion Oral": {"codigo": "DOC-06", "nombre": "Julia Moreno", "email": "julia.moreno@universidad.edu.co"},
+}
+
 
 def _sigmoide(x):
     return 1 / (1 + np.exp(-x))
@@ -72,8 +83,13 @@ def generar(n_estudiantes=700, materias_por_estudiante=4, semilla=SEMILLA):
                 })
             nota_c3 = _nota(rng, base + 0.35 * caida - 0.2 * dif, 0.45)
             definitiva = round(sum(p * nc for p, nc in zip(PESOS_CORTES, notas_cortes + [nota_c3])), 2)
-            fila.update({"nota_corte3": nota_c3, "nota_definitiva": definitiva,
-                         "pierde": int(definitiva < NOTA_APROBATORIA)})
+            fila.update({
+                "nota_corte3": nota_c3,
+                "nota_definitiva": definitiva,
+                "pierde": int(definitiva < NOTA_APROBATORIA),
+                "docente_id": DOCENTES[asig]["codigo"],
+                "curso": f"{asig.split()[0][:3].upper()}-G{(i % 2) + 1:02d}",
+            })
             filas.append(fila)
     return pd.DataFrame(filas)
 
